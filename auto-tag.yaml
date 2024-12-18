@@ -1,0 +1,47 @@
+trigger:
+- main
+- development
+
+variables:
+  defaultBranch: "main"
+  major: 1
+  minor: 0
+  patch: $[counter(variables['patch'], 2)]
+  name: "v$(major).$(minor).$(patch)"
+
+jobs:
+- job: autotagging
+  steps:
+  - checkout: self
+    persistCredentials: true
+
+  - script: |
+      git tag "$(name)"
+      git push origin "$(name)"
+    displayName: 'Create Git Tag'
+    condition: eq(variables['Build.SourceBranchName'], variables['defaultBranch'])
+
+- job: sonarcloud
+  steps:
+  - script: |
+      sudo apt-get update
+      sudo apt-get install -y openjdk-17-jdk
+    displayName: 'Install OpenJDK 17'
+
+  - task: SonarCloudPrepare@1
+    inputs:
+      SonarCloud: 'SonarCloud Shared'
+      organization: 'eto-cicd'
+      scannerMode: 'CLI'
+      configMode: 'manual'
+      cliProjectKey: '$(Build.Repository.Name)'
+      cliProjectName: '$(Build.Repository.Name)'
+      cliSources: '$(System.DefaultWorkingDirectory)'
+
+  - task: SonarCloudAnalyze@1
+    displayName: SonarCloud Scan
+
+  - task: SonarCloudPublish@1
+    displayName: SonarCloud Publish
+    inputs:
+      pollingTimeoutSec: '300'
