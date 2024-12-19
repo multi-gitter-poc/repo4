@@ -31,7 +31,7 @@ jobs:
   - task: SonarCloudPrepare@1
     inputs:
       SonarCloud: 'SonarCloud Shared'
-      organization: 'eto-cicd'
+      organization: 'test-org'
       scannerMode: 'CLI'
       configMode: 'manual'
       cliProjectKey: '$(Build.Repository.Name)'
